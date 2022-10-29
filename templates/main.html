@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <title>Document</title>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+  </head>
+  <body>
+    <div class="title">
+      <h1>QUARISHMA WEB DASHBOARD</h1>
+    </div>
+    <div class="hero">
+      <form method="post" class="_form">
+        <label for="option"> WHAT SHOULD I DISPLAY? </label>
+        <select name="option" id="opt">
+          <option id="camera" value="camera">Camera</option>
+          <option id="images" value="image">Images</option>
+          <option id="sounds" value="sound">Sounds</option>
+          <option id="videos" value="video">Videos</option>
+        </select>
+        <br />
+
+        <!-- IMAGE FILE SELECTOR -->
+        <label for="choose_image"> CHOOSE THE IMAGE FILE </label>
+        <select name="choose_image" id="choose_image">
+          {%for i in range(0, leni)%}
+          <option value="{{images[i]}}">{{images[i]}}</option>
+          {%endfor%}
+        </select>
+        <label
+          for="choose_image"
+          style="color: #b2b2b2; font-size: small"
+          onclick="document.getElementById('file-input').click();"
+        >
+          <!-- <form
+            action="http://localhost:5000/uploader"
+            method="post"
+            style="display: inline"
+            enctype = "multipart/form-data"
+          >
+            <input
+              id="file-input"
+              type="file"
+              name="name"
+              accept="image/*"
+              style="display: none"
+            /> -->
+          ADD A FILE
+          <!-- </form> -->
+        </label>
+
+        <!-- SOUND FILE SELECTOR -->
+        <label for="choose_sound"> CHOOSE THE SOUND FILE </label>
+        <select name="choose_sound" id="choose_sound">
+          {%for i in range(0, lens)%}
+          <option value="{{sounds[i]}}">{{sounds[i]}}</option>
+          {%endfor%}
+        </select>
+        <label
+          for="choose_sound"
+          style="color: #b2b2b2; font-size: small"
+          onclick="document.getElementById('file-input').click();"
+        >
+          ADD A FILE
+        </label>
+
+        <!-- VIDEO FILE SELECTOR -->
+        <label for="choose_video"> CHOOSE THE VIDEO FILE </label>
+        <select name="choose_video" id="choose_video">
+          {%for i in range(0, lenv)%}
+          <option value="{{videos[i]}}">{{videos[i]}}</option>
+          {%endfor%}
+        </select>
+        <label
+          for="choose_video"
+          style="color: #b2b2b2; font-size: small"
+          onclick="document.getElementById('file-input').click();"
+        >
+          ADD A FILE
+        </label>
+        <br />
+
+        <!-- SUBMIT BUTTON -->
+        <button type="submit">DO IT -></button>
+        <br />
+        <button {{can_not_stop}} id="stop_form" onclick="handle_stop_click()">
+          STOP
+        </button>
+      </form>
+      <!-- ARC LOGO -->
+      <div class="logo">
+        <img src="{{ url_for('static', filename='LOGO.svg') }}" alt="logo" />
+      </div>
+    </div>
+  </body>
+</html>
