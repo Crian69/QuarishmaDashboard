@@ -44,8 +44,10 @@ function showAllRelatedStuff(elementId) {
 
 function handle_stop_click() {
   var xhr = new XMLHttpRequest();
-  xhr.open("POST", "http://127.0.0.1:5000/stop", true);
+  var or = location.origin;
+  xhr.open("POST", or + "/stop", true);
   xhr.setRequestHeader("Content-Type", "application/json");
   xhr.send();
+  location.reload;
   return false;
 }

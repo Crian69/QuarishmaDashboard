@@ -1,10 +1,10 @@
 import os
 import sys
 import enum
-import time
 import subprocess
 from typing import Optional
-from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, redirect, url_for, make_response
 
 app = Flask(__name__)
 
@@ -16,100 +16,89 @@ class Play(enum.Enum):
     SOUNDS = "sounds"
 
 
-class QuarishmaPlayer:
+class Player:
     def __init__(self) -> None:
-        self.what: Play
-        self.where: subprocess.Popen
-        self.old_where: subprocess.Popen
         self.isPlaying = False
+        self.to_play = Play
+        self.process: subprocess.Popen
 
-    def play(self, what: Play, file: Optional[str] = None):
+    def play(self, _type: Play, file: Optional[str] = None):
         if self.isPlaying:
-            self.old_where = self.where
-        self.what = what
-        if what == Play.CAMERA:
-            self.where = subprocess.Popen(
-                [sys.executable, os.path.join(".", "apps", "camera.py")]
-            )
-        if what == Play.IMAGES:
-            self.where = subprocess.Popen(
-                [sys.executable, os.path.join(".", "apps", "image.py"), file]
-            )
-        if self.isPlaying:
-            # waiting for new app to open
-            time.sleep(1)
-            self.stop()
-
+            self.process.terminate()
+        match _type:
+            case Play.CAMERA:
+                self.process = subprocess.Popen(
+                    [sys.executable, os.path.join(".", "apps", "camera.py")]
+                )
+            case Play.VIDEOS:
+                self.process = subprocess.Popen(
+                    [sys.executable, os.path.join(".", "apps", "video.py"), file]
+                )
+            case Play.IMAGES:
+                self.process = subprocess.Popen(
+                    [sys.executable, os.path.join(".", "apps", "image.py"), file]
+                )
+            case Play.SOUNDS:
+                print("HI")
+            case _:
+                raise ValueError("Invalid task for player to play")
         self.isPlaying = True
 
     def stop(self):
-        # self.isPlaying = False
-        self.old_where.terminate()
+        if self.isPlaying:
+            self.process.terminate()
+            self.isPlaying = False
 
 
-player = QuarishmaPlayer()
+player = Player()
 
 
-@app.get("/")
+@app.route("/", methods=["GET", "POST"])
 def main():
-    images = os.listdir(os.path.join(".", "media", "images"))
-    videos = os.listdir(os.path.join(".", "media", "videos"))
-    sounds = os.listdir(os.path.join(".", "media", "sounds"))
-    can_not_stop = "" if player.isPlaying else "disabled"
+    if request.method == "GET":
+        images = os.listdir(os.path.join(".", "media", "images"))
+        videos = os.listdir(os.path.join(".", "media", "videos"))
+        sounds = os.listdir(os.path.join(".", "media", "sounds"))
+        can_not_stop = "" if player.isPlaying else "disabled"
 
-    return render_template(
-        "main.html",
-        images=images,
-        leni=len(images),
-        videos=videos,
-        lenv=len(videos),
-        sounds=sounds,
-        lens=len(sounds),
-        can_not_stop=can_not_stop,
-    )
-
-
-@app.post("/")
-def p():
-    form_resp = request.form
-    file_to_play = None
-    to_play = form_resp["option"]
-    if to_play == "camera":
-        to_play = Play.CAMERA
+        return render_template(
+            "main.html",
+            images=images,
+            leni=len(images),
+            videos=videos,
+            lenv=len(videos),
+            sounds=sounds,
+            lens=len(sounds),
+            can_not_stop=can_not_stop,
+        )
     else:
-        file_to_play = form_resp["choose_image"]
-        to_play = Play.IMAGES
+        form_resp = request.form
+        file_to_play = None
+        to_play = form_resp["option"]
+        if to_play == "camera":
+            to_play = Play.CAMERA
+        elif to_play == "image":
+            file_to_play = form_resp["choose_image"]
+            to_play = Play.IMAGES
+        elif to_play == "video":
+            file_to_play = form_resp["choose_video"]
+            to_play = Play.VIDEOS
+        else:
+            return "Invalid Request"
 
-    player.play(to_play, file_to_play)
-    return redirect("/")
+        player.play(to_play, file_to_play)
+        return redirect(url_for("main"))
 
 
 @app.post("/stop")
 def stop():
-    print("Here")
-    if player.isPlaying:
-        player.where.terminate()
-        player.isPlaying = False
+    player.stop()
     return redirect(url_for("main"))
-
-
-from werkzeug.utils import secure_filename
 
 
 @app.route("/upload")
 def upload_file():
-    return """
-        <html>
-   <body>
-      <form action = "http://localhost:5000/uploader" method = "POST" 
-         enctype = "multipart/form-data">
-         <input type = "file" name = "file" />
-         <input type = "submit"/>
-      </form>   
-   </body>
-</html>
-    """
-
+    return f'<html><body><form action = "{request.base_url}/uploader" method = "POST" enctype = "multipart/form-data"><input type = "file" name = "file" /><input type = "submit"/></form></body></html>'
 
 @app.route("/uploader", methods=["GET", "POST"])
 def upload_fil():
@@ -118,7 +107,7 @@ def upload_fil():
         f.save(secure_filename(f.filename))
         return "file uploaded successfully"
 
-2
+
 if __name__ == "__main__":
     try:
         app.run(debug=True, host="0.0.0.0")
