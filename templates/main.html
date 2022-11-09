@@ -43,15 +43,15 @@
             action="http://localhost:5000/uploader"
             method="post"
             style="display: inline"
-            enctype = "multipart/form-data"
-          >
-            <input
-              id="file-input"
-              type="file"
-              name="name"
-              accept="image/*"
-              style="display: none"
-            /> -->
+            enctype="multipart/form-data"
+          > -->
+          <input
+            id="image-input"
+            type="file"
+            name="name"
+            accept="image/*"
+            style="display: none"
+          />
           ADD A FILE
           <!-- </form> -->
         </label>
@@ -90,7 +90,12 @@
         <!-- SUBMIT BUTTON -->
         <button type="submit">DO IT -></button>
         <br />
-        <button {{can_not_stop}} id="stop_form" onclick="handle_stop_click()" type="button">
+        <button
+          {{can_not_stop}}
+          id="stop_form"
+          onclick="handle_stop_click()"
+          type="button"
+        >
           STOP
         </button>
       </form>
